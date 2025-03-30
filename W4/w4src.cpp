@@ -1,3 +1,10 @@
+/*
+UTF-8, LF에서 CLRF로 해라ㅏㅏㅏ
+리눅스라 Windows.h 없어서 별도 헤더파일 정의
+cpp header로 다 교체
+GCC말고 G++쓰기!!!
+*/
+
 // #pragma warning(disable:4996)
 // #include <Windows.h>
 // #include <stdio.h>
@@ -5,9 +12,11 @@
 
 #include <cstdio>
 #include <cstdlib>
-#include "../bmp.h"
+#include <iostream>
+#include <cmath>
+#include "bmp.h"
 
-void InverseImage(BYTE* Img, BYTE *Out, int W, int H)
+void InverseImage (BYTE* Img, BYTE *Out, int W, int H)
 {
 	int ImgSize = W * H;
 	for (int i = 0; i < ImgSize; i++)
@@ -120,11 +129,54 @@ void Binarization(BYTE * Img, BYTE * Out, int W, int H, BYTE Threshold)
 	}
 }
 
-int GozalezBinThresh()
+int GozalezBinThresh(BYTE * Img, int W, int H)
 {
-	int val;
-	//
-	return val;
+	int optimal_thresh;
+
+	int ImgSize = W * H;
+	int hist[256];
+	int hist_size = sizeof(hist) / sizeof(hist[0]);
+
+	// (BYTE* Img, int* Histo, int W, int H)
+	ObtainHistogram(Img, hist, W, H);
+
+	float max_ob = .0;
+
+	for (int thresh = 0; thresh < hist_size; thresh++) {
+
+		float np_f = .0; // no. pixels foreground
+		float np_b = .0; // no. pixels background
+		float in_f = .0; // intensity foreground
+		float in_b = .0; // intensity backgorund
+
+		for (int brightness = 0; brightness < hist_size; brightness++) {
+			if (hist[brightness] < thresh) {
+				// left (darker) background
+				np_b++;
+				in_b += hist[brightness] * brightness;
+			}
+			else {
+				// right (brighter) foreground
+				np_f++;
+				in_f += hist[brightness] * brightness;
+			}
+		}
+		
+		float Wb = np_b / ImgSize; // mean no. px bg
+		float Wf = np_f / ImgSize; // mean no. px fg
+		float Ub = in_b / ImgSize; // mean intensity bg
+		float Uf = in_f / ImgSize; // mean intensity fg
+
+		float ob = Wb * Wf * pow(Ub - Uf, 2);
+		if (ob > max_ob) {
+			max_ob = ob;
+			optimal_thresh = thresh;
+			std::cout << "max_ob: " << ob << std::endl;
+			std::cout << "optimal_thresh: " << optimal_thresh << std::endl;
+		}
+	}
+
+	return optimal_thresh;
 }
 
 int main()
@@ -133,7 +185,7 @@ int main()
 	BITMAPINFOHEADER hInfo; // 40바이트
 	RGBQUAD hRGB[256]; // 1024바이트
 	FILE* fp;
-	fp = fopen("coin.bmp", "rb");
+	fp = fopen("../inp_img/coin.bmp", "rb");
 	if (fp == NULL) {
 		printf("File not found!\n");
 		return -1;
@@ -147,24 +199,11 @@ int main()
 	fread(Image, sizeof(BYTE), ImgSize, fp);
 	fclose(fp);
 
-	/*
-	int Histo[256] = { 0 };
-	int AHisto[256] = { 0 };
-
-	ObtainHistogram(Image, Histo, hInfo.biWidth, hInfo.biHeight);
-	ObtainAHistogram(Histo, AHisto);
-	HistogramEqualization(Image, Output, AHisto, hInfo.biWidth, hInfo.biHeight);
-	*/
-
-	int Thres = GozalezBinThresh();
+	// (BYTE * Img, int W, int H)
+	int Thres = GozalezBinThresh(Image, hInfo.biWidth, hInfo.biHeight);
 	Binarization(Image, Output, hInfo.biWidth, hInfo.biHeight, Thres);
 
-	//HistogramStretching(Image, Output, Histo, hInfo.biWidth, hInfo.biHeight);
-	//InverseImage(Image, Output, hInfo.biWidth, hInfo.biHeight);
-	//BrightnessAdj(Image, Output, hInfo.biWidth, hInfo.biHeight, -120);
-	//ContrastAdj(Image, Output, hInfo.biWidth, hInfo.biHeight, 0.5);
-
-	fp = fopen("output.bmp", "wb");
+	fp = fopen("./out/gonz_bin.bmp", "wb");
 	fwrite(&hf, sizeof(BYTE), sizeof(BITMAPFILEHEADER), fp);
 	fwrite(&hInfo, sizeof(BYTE), sizeof(BITMAPINFOHEADER), fp);
 	fwrite(hRGB, sizeof(RGBQUAD), 256, fp);

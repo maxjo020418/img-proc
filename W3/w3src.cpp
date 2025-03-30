@@ -67,6 +67,7 @@ typedef unsigned char BYTE;
 */
 
 // 리눅스라 안씀
+
 // #include <Windows.h>
 // #pragma warning(disable:4996)
 
@@ -74,11 +75,10 @@ typedef unsigned char BYTE;
 // #include <stdlib.h>
 #include <cstdio>
 #include <cstdlib>
-#include "../bmp.h"
+#include "bmp.h"
 
 // 별도 추가
 #include <string>
-
 
 void save_bmp (
 	std::string fname,
