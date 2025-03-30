@@ -1,5 +1,5 @@
 /*
-UTF-8, LF에서 CLRF로 해라ㅏㅏㅏ
+UTF-8으로, LF에서 CLRF로 해라ㅏㅏㅏ
 리눅스라 Windows.h 없어서 별도 헤더파일 정의
 cpp header로 다 교체
 GCC말고 G++쓰기!!!
@@ -134,7 +134,7 @@ int GozalezBinThresh(BYTE * Img, int W, int H)
 	int optimal_thresh;
 
 	int ImgSize = W * H;
-	int hist[256];
+	int hist[256] = {0}; // don't forget to init. to 0!!!!!
 	int hist_size = sizeof(hist) / sizeof(hist[0]);
 
 	// (BYTE* Img, int* Histo, int W, int H)
@@ -149,28 +149,33 @@ int GozalezBinThresh(BYTE * Img, int W, int H)
 		float in_f = .0; // intensity foreground
 		float in_b = .0; // intensity backgorund
 
-		for (int brightness = 0; brightness < hist_size; brightness++) {
-			if (hist[brightness] < thresh) {
+		for (int bw_lvl = 0; bw_lvl < hist_size; bw_lvl++) {
+			if (bw_lvl < thresh) {
 				// left (darker) background
-				np_b++;
-				in_b += hist[brightness] * brightness;
+				np_b += hist[bw_lvl];
+				in_b += hist[bw_lvl] * bw_lvl;
 			}
 			else {
 				// right (brighter) foreground
-				np_f++;
-				in_f += hist[brightness] * brightness;
+				np_f += hist[bw_lvl];
+				in_f += hist[bw_lvl] * bw_lvl;
 			}
 		}
 		
-		float Wb = np_b / ImgSize; // mean no. px bg
-		float Wf = np_f / ImgSize; // mean no. px fg
-		float Ub = in_b / ImgSize; // mean intensity bg
-		float Uf = in_f / ImgSize; // mean intensity fg
+		float Wb = np_b / ImgSize; // % of no. bg px
+		float Wf = np_f / ImgSize; // % of no. fg px
+		float Ub = in_b / np_b; // mean intensity bg
+		float Uf = in_f / np_f; // mean intensity fg
+
+		// printf("======\n%d\n%f, %f, %f, %f, %d\n", thresh, np_b, np_f, in_b, in_f, ImgSize);
+		// printf("%f, %f, %f, %f\n", Wb, Wf, Ub, Uf);
 
 		float ob = Wb * Wf * pow(Ub - Uf, 2);
 		if (ob > max_ob) {
 			max_ob = ob;
 			optimal_thresh = thresh;
+
+			std::cout << "=============" << std::endl;
 			std::cout << "max_ob: " << ob << std::endl;
 			std::cout << "optimal_thresh: " << optimal_thresh << std::endl;
 		}
