@@ -11,10 +11,10 @@
 // When you create your own definitions on Linux, 
 // you must ensure that these structures are packed 
 // (using #pragma pack(push, 1) / #pragma pack(pop) or equivalent attributes) 
-// so that no extra padding is added. 
+// so that no extra padding is added.
 
 // Otherwise, the layout might not match the BMP file, 
-// and reading the file directly into the structure would result in incorrect data.
+// and reading the file directly into the structure would result in incorrect output.
 
 #ifdef BMP_H
     // 호옥시나 하니
@@ -70,9 +70,11 @@ typedef unsigned char BYTE;
 // #include <Windows.h>
 // #pragma warning(disable:4996)
 
-#include <stdio.h>
-#include <stdlib.h>
-#include "bmp.h" // 따로 헤더파일 제작 (일단 여기 쓴 struct들이라도)
+// #include <stdio.h>
+// #include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
+#include "../bmp.h"
 
 // 별도 추가
 #include <string>
@@ -86,8 +88,8 @@ void save_bmp (
 	BYTE* img
 	) {
 	// fopen이 c_string(const char)만 받아서 std::string에서 char arr로 바꿔줘야함
-	// [별도 data 디렉터리 놔둔 가정 하에 작동]
-	std::string path = std::string("./data/") + fname + ".bmp";
+	// [별도 out 디렉터리 놔둔 가정 하에 작동]
+	std::string path = std::string("./out/") + fname + ".bmp";
 	const char* PATH = path.c_str();
 
 	printf("%s 저장 중...", PATH);
@@ -116,7 +118,7 @@ int main()
 
 	// file handling
 	FILE* fp;
-	fp = fopen("./data/lenna.bmp", "rb");
+	fp = fopen("../inp_img/lenna.bmp", "rb");
 	if(fp == NULL) return -1;
 
 	/*

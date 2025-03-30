@@ -1,7 +1,12 @@
-#pragma warning(disable:4996)
-#include <stdio.h>
-#include <stdlib.h>
-#include <Windows.h>
+// #pragma warning(disable:4996)
+// #include <Windows.h>
+// #include <stdio.h>
+// #include <stdlib.h>
+
+#include <cstdio>
+#include <cstdlib>
+#include "../bmp.h"
+
 void InverseImage(BYTE* Img, BYTE *Out, int W, int H)
 {
 	int ImgSize = W * H;
@@ -10,6 +15,7 @@ void InverseImage(BYTE* Img, BYTE *Out, int W, int H)
 		Out[i] = 255 - Img[i];
 	}
 }
+
 void BrightnessAdj(BYTE* Img, BYTE* Out, int W, int H, int Val)
 {
 	int ImgSize = W * H;
@@ -26,6 +32,7 @@ void BrightnessAdj(BYTE* Img, BYTE* Out, int W, int H, int Val)
 		else 	Out[i] =Img[i] + Val;
 	}
 }
+
 void ContrastAdj(BYTE* Img, BYTE* Out, int W, int H, double Val)
 {
 	int ImgSize = W * H;
@@ -58,7 +65,7 @@ void ObtainAHistogram(int* Histo, int* AHisto)
 {
 	for (int i = 0; i < 256; i++) {
 		for (int j = 0; j <= i; j++) {
-			AHisto[i] = AHisto[i]  + Histo[j];
+			AHisto[i] = AHisto[i] + Histo[j];
 		}
 	}
 	/*FILE* fp = fopen("Ahistogram.txt", "wt");
@@ -122,9 +129,9 @@ int GozalezBinThresh()
 
 int main()
 {
-	BITMAPFILEHEADER hf; // 14¹ÙÀÌÆ®
-	BITMAPINFOHEADER hInfo; // 40¹ÙÀÌÆ®
-	RGBQUAD hRGB[256]; // 1024¹ÙÀÌÆ®
+	BITMAPFILEHEADER hf; // 14ë°”ì´íŠ¸
+	BITMAPINFOHEADER hInfo; // 40ë°”ì´íŠ¸
+	RGBQUAD hRGB[256]; // 1024ë°”ì´íŠ¸
 	FILE* fp;
 	fp = fopen("coin.bmp", "rb");
 	if (fp == NULL) {
@@ -140,14 +147,18 @@ int main()
 	fread(Image, sizeof(BYTE), ImgSize, fp);
 	fclose(fp);
 
-	/*int Histo[256] = { 0 };
+	/*
+	int Histo[256] = { 0 };
 	int AHisto[256] = { 0 };
 
 	ObtainHistogram(Image, Histo, hInfo.biWidth, hInfo.biHeight);
 	ObtainAHistogram(Histo, AHisto);
-	HistogramEqualization(Image, Output, AHisto, hInfo.biWidth, hInfo.biHeight);*/
+	HistogramEqualization(Image, Output, AHisto, hInfo.biWidth, hInfo.biHeight);
+	*/
+
 	int Thres = GozalezBinThresh();
 	Binarization(Image, Output, hInfo.biWidth, hInfo.biHeight, Thres);
+
 	//HistogramStretching(Image, Output, Histo, hInfo.biWidth, hInfo.biHeight);
 	//InverseImage(Image, Output, hInfo.biWidth, hInfo.biHeight);
 	//BrightnessAdj(Image, Output, hInfo.biWidth, hInfo.biHeight, -120);

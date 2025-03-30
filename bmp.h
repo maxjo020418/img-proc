@@ -6,7 +6,7 @@
 #ifndef BMP_H
 #define BMP_H
 
-#include <stdint.h>
+#include <cstdint>
 
 /*
 The original Windows headers define BITMAPINFOHEADER and RGBQUAD 
@@ -18,7 +18,7 @@ you must ensure that these structures are packed
 so that no extra padding is added. 
 
 Otherwise, the layout might not match the BMP file, 
-and reading the file directly into the structure would result in incorrect data.
+and reading the file directly into the structure would result in incorrect out.
 */
 
 // 헤더니까 패딩없이 struct 바이트 우겨넣기
