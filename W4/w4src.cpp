@@ -129,9 +129,9 @@ void Binarization(BYTE * Img, BYTE * Out, int W, int H, BYTE Threshold)
 	}
 }
 
-int GozalezBinThresh(BYTE * Img, int W, int H)
+int GozalezBinThresh(BYTE * Img, int W, int H, float epsilon)
 {
-	int optimal_thresh;
+	int optimal_thresh = 0;
 
 	int ImgSize = W * H;
 	int hist[256] = {0}; // don't forget to init. to 0!!!!!
@@ -141,7 +141,25 @@ int GozalezBinThresh(BYTE * Img, int W, int H)
 	ObtainHistogram(Img, hist, W, H);
 
 	float max_ob = .0;
+	int max_brightness;
+	int min_brightness;
 
+	for (int bw = 0; bw < hist_size; bw++) {
+		if (hist[bw] > 0) {
+			max_brightness = bw;
+			break;
+		}
+	}
+	for (int bw = hist_size - 1; bw > 0; bw--) {
+		if (hist[bw] > 0) {
+			min_brightness = bw;
+			break;
+		}
+	}
+
+	float T = (max_brightness + min_brightness) / 2;
+
+	// main caculation
 	for (int thresh = 0; thresh < hist_size; thresh++) {
 
 		float np_f = .0; // no. pixels foreground
@@ -162,14 +180,29 @@ int GozalezBinThresh(BYTE * Img, int W, int H)
 			}
 		}
 		
-		float Wb = np_b / ImgSize; // % of no. bg px
-		float Wf = np_f / ImgSize; // % of no. fg px
-		float Ub = in_b / np_b; // mean intensity bg
-		float Uf = in_f / np_f; // mean intensity fg
+		// float Wb = np_b / ImgSize; // % of no. bg px
+		// float Wf = np_f / ImgSize; // % of no. fg px
+		float Ub; // mean intensity bg
+		float Uf; // mean intensity fg
 
-		// printf("======\n%d\n%f, %f, %f, %f, %d\n", thresh, np_b, np_f, in_b, in_f, ImgSize);
-		// printf("%f, %f, %f, %f\n", Wb, Wf, Ub, Uf);
+		// 0 division guard
+		if ( not (np_b <= 0 or np_f <= 0) ) {
+			Ub = in_b / np_b;
+			Uf = in_f / np_f;
+		}
+		else { // if 0 div set to 0
+			Ub = .0;
+			Uf = .0;
+		}
 
+		float new_T = (Ub + Uf) / 2.0;
+		float t_delta = std::fabs(new_T - T);
+
+		// end condition, using T delta
+		std::cout << t_delta << std::endl;
+		if (t_delta < epsilon) return thresh;
+
+		/* otsu's method...?
 		float ob = Wb * Wf * pow(Ub - Uf, 2);
 		if (ob > max_ob) {
 			max_ob = ob;
@@ -179,8 +212,10 @@ int GozalezBinThresh(BYTE * Img, int W, int H)
 			std::cout << "max_ob: " << ob << std::endl;
 			std::cout << "optimal_thresh: " << optimal_thresh << std::endl;
 		}
+		*/
 	}
 
+	// left it just in case, also used when otsu's method is used
 	return optimal_thresh;
 }
 
@@ -205,7 +240,10 @@ int main()
 	fclose(fp);
 
 	// (BYTE * Img, int W, int H)
-	int Thres = GozalezBinThresh(Image, hInfo.biWidth, hInfo.biHeight);
+	float eps = 2.0;
+	int Thres = GozalezBinThresh(Image, hInfo.biWidth, hInfo.biHeight, eps);
+	std::cout << "Epsilon: " << eps << std::endl;
+	std::cout << "Threshold: " << Thres << std::endl;
 	Binarization(Image, Output, hInfo.biWidth, hInfo.biHeight, Thres);
 
 	fp = fopen("./out/gonz_bin.bmp", "wb");
