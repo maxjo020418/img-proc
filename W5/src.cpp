@@ -102,7 +102,7 @@ int main()
 					temp[(m + Margin) * Length + (n + Margin)] = Image[(i+m)*W + j+n];
 				}
 			}
-			// Meiand은 temp받아서 중심점에 있는 픽셀값(BYTE) 반환, Output에 저장
+			// Median은 temp받아서 중심점에 있는 픽셀값(BYTE) 반환, Output에 저장
 			Output[i * W + j] = Median(temp, WSize);
 		}
 	}
