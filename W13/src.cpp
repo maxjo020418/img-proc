@@ -211,40 +211,51 @@ void drawXO(
 }
 
 void PointFinder(BYTE* Img, BYTE *Out, int W, int H) {
-    int i, j, px, count;
+    int i, j, px, px_count, branch_count, end_count, normal_count;
+	branch_count = end_count = normal_count = 0;
 
     for (i = 0; i < H; i++) {
         for (j = 0; j < W; j++) {
             px = i * W + j;
             
             // if line
-            if (Img[px] == 255) {
-                count = 0;
+            if (Img[px] == 0) {
+                px_count = 0;
 				for (int range_y = -1; range_y <= 1; range_y++) {
                     for (int range_x = -1; range_x <= 1; range_x++) {
-                        if (px + range_y * W + range_x == 255) count ++;
+						int npx = px + (range_y * W + range_x);
+						int npx_val = Img[npx];
+                        if (npx_val == 0) px_count ++;
                     }
                 }
                 // if branch
-                if (count >= 3) {
+                if (px_count >= 4) {
                     // draw circle
                     drawXO(Out, W, H, j, i, false);
+					branch_count++;
                 }
                 // if end
-                else if (count <= 1) {
+                else if (px_count <= 2) {
                     // draw x
                     drawXO(Out, W, H, j, i, true);
+					end_count++;
                 }
+				// normal
+				else {
+					normal_count++;
+				}
                 Out[px] = Img[px];
 			}
             // if background
-			else
+			else {
                 // 이미 x나 o그려져 있는지 검출
-                if (Out[px] != 127) {
+                if (Out[px] != 128) {
                     Out[px] = Img[px];
                 }
+			}
         }
     }
+	printf("branch count: %d\nend count: %d\nnormal count: %d\n\n", branch_count, end_count, normal_count);
 }
 
 void SaveBMPFile(BITMAPFILEHEADER hf, BITMAPINFOHEADER hInfo, 
@@ -302,11 +313,12 @@ int main()
 	Erosion(Image, Output, W, H);
 	Erosion(Output, Image, W, H);
 	InverseImage(Image, Image, W, H);
+	
 	zhangSuen(Image, Output, H, W);
+    SaveBMPFile(hf, hInfo, hRGB, Output, hInfo.biWidth, hInfo.biHeight, "./output/outline.bmp");
 
     PointFinder(Output, Image, W, H);
-
-    SaveBMPFile(hf, hInfo, hRGB, Image, hInfo.biWidth, hInfo.biHeight, "./output/outline.bmp");
+    SaveBMPFile(hf, hInfo, hRGB, Image, hInfo.biWidth, hInfo.biHeight, "./output/outline_points.bmp");
 
     free(Image);
 	free(Output);
